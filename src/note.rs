@@ -2,42 +2,68 @@
 /// to associate series of `Content`s together.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[derive(Debug)]
-struct Note {
+pub struct Note {
     content: Vec<Content>,
-    children: Vec<Note>,
 }
 
 impl Default for Note {
     fn default() -> Self {
-        Self {
-            content: vec![],
-            children: vec![],
-        }
+        Self { content: vec![] }
     }
 }
 
+impl ToString for Note {
+    fn to_string(&self) -> String {
+        let s: String = self
+            .content
+            .iter()
+            .map(|content| match &content.content {
+                ContentType::Media(_) => String::from("MEDIA@TODO"),
+                ContentType::Text(t) => String::from("TEXT@TODO"),
+                ContentType::Tag(t) => String::from("TAG@TODO"),
+                ContentType::Identifier(i) => match i {
+                    Identifier::Person(p) => p.to_string(),
+                    Identifier::Place => String::from("PLACE@TODO"),
+                    Identifier::Time(t) => t.to_string(),
+                    Identifier::Thing => String::from("THING@TODO"),
+                    Identifier::Event => String::from("EVENT@TODO"),
+                },
+                ContentType::Link(_) => String::from("LINK@TODO"),
+                ContentType::Image => String::from("Image@TODO"),
+                ContentType::Note(_) => String::from("NOTE@TODO"),
+                ContentType::Task(_) => String::from("TASK@TODO"),
+            })
+            .collect();
+        s
+    }
+}
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[derive(Debug)]
-enum Media {
+pub struct Task {
+    desc: String,
+}
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
+#[derive(Debug)]
+pub enum Media {
     Image,
 }
 
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[derive(Debug)]
-enum Image {
+pub enum Image {
     Attached,
     Linked,
 }
 
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[derive(Debug)]
-enum Link {
+pub enum Link {
     Parent(Content),
 }
 
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
 #[derive(Debug)]
-enum ContentType {
+pub enum ContentType {
     Media(Media),
     Text(String),
     Tag(String),
@@ -45,6 +71,7 @@ enum ContentType {
     Link(String),
     Image,
     Note(Box<Note>),
+    Task(Task),
 }
 
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
@@ -59,6 +86,7 @@ struct Content {
 #[derive(Debug)]
 enum Identifier {
     Person(Person),
+    Event,
     Place,
     Time(String),
     Thing,
@@ -69,7 +97,13 @@ enum Identifier {
 struct Person {
     name: String,
 }
+impl ToString for Person {
+    fn to_string(&self) -> String {
+        self.name.to_string()
+    }
+}
 
+// Only `Note`s can have children, but all content can have links?
 //
 #[cfg(test)]
 mod test {
@@ -78,7 +112,6 @@ mod test {
     #[test]
     fn test_note() {
         let n = Note {
-            children: vec![],
             content: vec![
                 Content {
                     id: "1234".to_string(),
@@ -88,7 +121,6 @@ mod test {
                     links: vec![Link::Parent(Content {
                         id: "1234".to_string(),
                         content: ContentType::Note(Box::new(Note {
-                            children: vec![],
                             content: vec![Content {
                                 id: "1234".to_string(),
                                 content: ContentType::Tag("ML".to_string()),
@@ -106,6 +138,6 @@ mod test {
                 // })),
             ],
         };
-        println!("{:#?}", n);
+        println!("Note: {:#?}", n.to_string());
     }
 }

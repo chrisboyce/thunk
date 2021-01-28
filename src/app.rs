@@ -1,26 +1,37 @@
+use crate::note::Note;
 use eframe::{egui, epi};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
-pub struct TemplateApp {
+pub struct ThunkApp {
     // Example stuff:
     label: String,
     value: f32,
     painting: Painting,
+    state: Box<AppState>,
 }
-
-impl Default for TemplateApp {
+#[cfg_attr(feature = "persistence", derive(serde::Deserialize, serde::Serialize))]
+pub struct AppState {
+    notes: Vec<Note>,
+}
+impl Default for AppState {
+    fn default() -> Self {
+        Self { notes: vec![] }
+    }
+}
+impl Default for ThunkApp {
     fn default() -> Self {
         Self {
             // Example stuff:
             label: "Hello World!".to_owned(),
             value: 2.7,
             painting: Default::default(),
+            state: Default::default(),
         }
     }
 }
 
-impl epi::App for TemplateApp {
+impl epi::App for ThunkApp {
     fn name(&self) -> &str {
         "egui template"
     }
@@ -40,10 +51,11 @@ impl epi::App for TemplateApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
-        let TemplateApp {
+        let ThunkApp {
             label,
             value,
             painting,
+            state,
         } = self;
 
         // Examples of how to create different panels and windows.
@@ -54,13 +66,9 @@ impl epi::App for TemplateApp {
         egui::SidePanel::left("side_panel", 200.0).show(ctx, |ui| {
             ui.heading("Side Panel");
 
-            ui.horizontal(|ui| {
-                ui.label("Write something: ");
-                ui.text_edit_singleline(label);
-            });
-
             ui.add(egui::Slider::f32(value, 0.0..=10.0).text("value"));
             if ui.button("Increment").clicked {
+                state.notes.push(Note::default());
                 *value += 1.0;
             }
 
@@ -84,6 +92,13 @@ impl epi::App for TemplateApp {
 
         let mut s = String::new();
         egui::CentralPanel::default().show(ctx, |ui| {
+            for not in &state.notes {
+                let (_, r) = ui.horizontal(|ui| {
+                    ui.label("Write something: ");
+                    ui.text_edit_singleline(label);
+                });
+            }
+
             ui.heading("egui template");
             ui.hyperlink("https://github.com/emilk/egui_template");
             ui.add(egui::github_link_file_line!(
