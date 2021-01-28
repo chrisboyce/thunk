@@ -1,4 +1,5 @@
-use crate::note::Note;
+use crate::note::{ContentType, Note};
+use crate::note_widget::{toggle, NoteEditor};
 use eframe::{egui, epi};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -68,9 +69,14 @@ impl epi::App for ThunkApp {
 
             ui.add(egui::Slider::f32(value, 0.0..=10.0).text("value"));
             if ui.button("Increment").clicked {
-                state.notes.push(Note::default());
+                let note = Note::builder()
+                    .add_content(ContentType::Text("Some Text".to_string()))
+                    .build();
+                state.notes.push(note);
                 *value += 1.0;
             }
+            toggle(ui, &mut true);
+            ui.add(NoteEditor::default());
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                 ui.add(
@@ -94,8 +100,9 @@ impl epi::App for ThunkApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             for not in &state.notes {
                 let (_, r) = ui.horizontal(|ui| {
-                    ui.label("Write something: ");
-                    ui.text_edit_singleline(label);
+                    ui.add(NoteEditor::new(Box::new(not.clone())));
+                    // ui.label("Write something: ");
+                    // ui.text_edit_singleline(label);
                 });
             }
 

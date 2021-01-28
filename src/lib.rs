@@ -3,7 +3,8 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 mod app;
-mod note;
+pub mod note;
+pub mod note_widget;
 
 pub use app::ThunkApp;
 
