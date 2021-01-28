@@ -82,6 +82,7 @@ impl epi::App for TemplateApp {
             });
         });
 
+        let mut s = String::new();
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("egui template");
             ui.hyperlink("https://github.com/emilk/egui_template");
@@ -92,6 +93,7 @@ impl epi::App for TemplateApp {
             egui::warn_if_debug_build(ui);
 
             ui.separator();
+            let r = ui.add(egui::TextEdit::singleline(&mut s));
 
             ui.heading("Central Panel");
             ui.label("The central panel the region left after adding TopPanel's and SidePanel's");
